@@ -1,6 +1,7 @@
 # Fwatch
 
-A file watcher for Elixir.
+A file watcher for Elixir.  
+[![Build Status](https://travis-ci.org/ryo33/fwatch-ex.svg?branch=master)](https://travis-ci.org/ryo33/fwatch-ex)
 
 ## Installation
 
