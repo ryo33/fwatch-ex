@@ -5,7 +5,7 @@ defmodule Fwatch.Mixfile do
     [app: :fwatch,
      description: "A file watcher for Elixir",
      package: package,
-     version: "0.1.0",
+     version: "0.4.0",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -13,7 +13,8 @@ defmodule Fwatch.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :fs]]
+    [mod: {Fwatch, []},
+     applications: [:logger, :fs]]
   end
 
   defp deps do

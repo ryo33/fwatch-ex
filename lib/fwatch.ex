@@ -16,13 +16,13 @@ defmodule Fwatch do
 
   # Application callback
   def start(_type, _args) do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    GenServer.start_link(__MODULE__, [], name: :fwatch)
   end
 
   # GenServer callbacks
 
   def init(state) do
-    :fs.subscribe
+    :ok = :fs.subscribe
     {:ok, state}
   end
 
@@ -31,7 +31,7 @@ defmodule Fwatch do
   end
 
   def handle_info({_pid, {:fs, :file_event}, {path, events}}, targets) do
-    handle_file_event(targets, path, events)
+    handle_file_event(targets, to_string(path), events)
     {:noreply, targets}
   end
 
@@ -42,7 +42,7 @@ defmodule Fwatch do
   """
   @spec watch_file([pattern], callback) :: any
   def watch_file(files, callback) when is_list(files) do
-    GenServer.cast(__MODULE__, {:add_target, {:file, files, callback}})
+    GenServer.cast({:fwatch, node()}, {:add_target, {:file, files, callback}})
   end
 
   @spec watch_file(pattern, callback) :: any
@@ -55,7 +55,7 @@ defmodule Fwatch do
   """
   @spec watch_dir([pattern], callback) :: any
   def watch_dir(dirs, callback) when is_list(dirs) do
-    GenServer.cast({__MODULE__, node()}, {:add_target, {:dir, dirs, callback}})
+    GenServer.cast({:fwatch, node()}, {:add_target, {:dir, dirs, callback}})
   end
 
   @spec watch_dir(pattern, callback) :: any
