@@ -67,11 +67,11 @@ defmodule Fwatch do
     Enum.map(targets, fn
       {:file, files, callback} ->
         if Enum.any?(files, &(match_file?(path, &1))) do
-          callback.(path, events)
+          spawn fn -> callback.(path, events) end
         end
       {:dir, dirs, callback} ->
         if Enum.any?(dirs, &(match_dir?(path, &1))) do
-          callback.(path, events)
+          spawn fn -> callback.(path, events) end
         end
     end)
   end
