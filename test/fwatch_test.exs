@@ -3,13 +3,13 @@ defmodule FwatchTest do
   doctest Fwatch
 
   setup do
-    {:ok, pid} = Fwatch.start(:temporary, [])
+    pid = Process.whereis(:fwatch)
     {:ok, agent} = Agent.start_link(fn -> [] end)
     {:ok, pid: pid, agent: agent}
   end
 
   defp send_file_event(pid, path, agent) do
-    send pid, {self(), {:fs, :file_event}, {path, :created}}
+    send pid, {self(), {:fs, :file_event}, {to_char_list(path), :created}}
     :timer.sleep(50)
     result = Agent.get(agent, fn x -> x end)
     Agent.update(agent, fn _ -> [] end)
@@ -26,9 +26,6 @@ defmodule FwatchTest do
     fn path, event ->
       Agent.update(pid, fn x -> [{key, path, event} | x] end)
     end
-  end
-
-  defp get_from_agent(pid) do
   end
 
   test "watch_file", %{pid: pid, agent: agent} do
