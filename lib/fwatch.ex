@@ -2,6 +2,9 @@ defmodule Fwatch do
   use Application
   use GenServer
 
+  @root_dir File.cwd!
+
+  @type name :: atom | pid
   @type pattern :: String.t | Regex.t
   @typedoc """
   Callback for file event.
@@ -19,7 +22,21 @@ defmodule Fwatch do
     GenServer.start_link(__MODULE__, [], name: :fwatch)
   end
 
+  @doc """
+  Watch a specified directory.
+  """
+  def start_link(name, path) do
+    fs_name = Atom.to_string(name) |> Kernel.<>("_fs") |> String.to_atom()
+    :fs.start_link(fs_name, to_char_list(Path.expand(path, @root_dir)))
+    GenServer.start_link(__MODULE__, {fs_name, []}, name: name)
+  end
+
   # GenServer callbacks
+
+  def init({name, state}) do
+    :ok = :fs.subscribe(name)
+    {:ok, state}
+  end
 
   def init(state) do
     :ok = :fs.subscribe
@@ -40,27 +57,33 @@ defmodule Fwatch do
   @doc """
   Registers callback for given files.
   """
-  @spec watch_file([pattern], callback) :: any
-  def watch_file(files, callback) when is_list(files) do
-    GenServer.cast({:fwatch, node()}, {:add_target, {:file, files, callback}})
+  def watch_file(name \\ :fwatch, files, callback)
+
+  @spec watch_file(name, [pattern], callback) :: any
+  def watch_file(name, files, callback) when is_list(files) do
+    pid = if is_atom(name), do: {name, node()}, else: name
+    GenServer.cast(pid, {:add_target, {:file, files, callback}})
   end
 
-  @spec watch_file(pattern, callback) :: any
-  def watch_file(file, callback) do
-    watch_file([file], callback)
+  @spec watch_file(name, pattern, callback) :: any
+  def watch_file(name, file, callback) do
+    watch_file(name, [file], callback)
   end
 
   @doc """
   Registers the callback for given dirs.
   """
-  @spec watch_dir([pattern], callback) :: any
-  def watch_dir(dirs, callback) when is_list(dirs) do
-    GenServer.cast({:fwatch, node()}, {:add_target, {:dir, dirs, callback}})
+  def watch_dir(name \\ :fwatch, dirs, callback)
+
+  @spec watch_dir(name, [pattern], callback) :: any
+  def watch_dir(name, dirs, callback) when is_list(dirs) do
+    pid = if is_atom(name), do: {name, node()}, else: name
+    GenServer.cast(pid, {:add_target, {:dir, dirs, callback}})
   end
 
-  @spec watch_dir(pattern, callback) :: any
-  def watch_dir(dir, callback) do
-    watch_dir([dir], callback)
+  @spec watch_dir(name, pattern, callback) :: any
+  def watch_dir(name, dir, callback) do
+    watch_dir(name, [dir], callback)
   end
 
   defp handle_file_event(targets, path, events) do
@@ -102,5 +125,5 @@ defmodule Fwatch do
     end
   end
 
-  defp expath(path), do: Path.expand(path, System.cwd!())
+  defp expath(path), do: Path.expand(path, @root_dir)
 end

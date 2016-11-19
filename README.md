@@ -10,7 +10,7 @@ The package can be installed as:
   1. Add fwatch to your list of dependencies in `mix.exs`:
     ```
     def deps do
-      [{:fwatch, "~> 0.1.0"}]
+      [{:fwatch, "~> 0.6.0"}]
     end
     ```
 
@@ -22,6 +22,7 @@ The package can be installed as:
     ```
 
 ## Usage
+See [online documentation](https://hexdocs.pm/fwatch/).  
 
 ### Examples
 ```elixir
@@ -38,7 +39,9 @@ Fwatch.watch_dir("dirname", callback)
 # Watch multiple directories and registers a callback
 Fwatch.watch_dir(["dirname1", "dirname2"], callback)
 ```
-See [Lists Events from Backend](https://github.com/synrc/fs#list-events-from-backend) for details of events.
+See [Lists Events from Backend](https://github.com/synrc/fs#list-events-from-backend) for details of events.  
 
 You can also use regular expressions as a filename or dirname like this:  
-`Fwatch.watch_file(~r"/User/tmp/.*", callback)`
+```elixir
+Fwatch.watch_file(~r"/User/tmp/.*", callback)
+```

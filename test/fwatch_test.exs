@@ -72,7 +72,7 @@ defmodule FwatchTest do
     assert hd(status) == {"/b/c/d/e", :created}
   end
 
-  test "multi handlers", %{pid: pid, agent: agent} do
+  test "multiple handlers", %{pid: pid, agent: agent} do
     Fwatch.watch_file(["/a/b/c", ~r(^/b/.*$)], update_func(agent, :a))
     Fwatch.watch_file(~r(^/a/b/.*$), update_func(agent, :b))
     Fwatch.watch_dir(["/a/b", ~r(^/b/.*$)], update_func(agent, :c))
@@ -101,5 +101,20 @@ defmodule FwatchTest do
     status = send_file_event(pid, "/b/c", agent)
     assert length(status) == 1
     assert Enum.at(status, 0) == {:a, "/b/c", :created}
+  end
+
+  test "start_link", %{pid: _pid, agent: agent} do
+    {:ok, pid} = Fwatch.start_link(:test, "./")
+    Fwatch.watch_file(pid, ["/a/b/c", ~r(^/b/.*$)], update_func(agent, :a))
+    Fwatch.watch_file(:test, ~r(^/a/b/.*$), update_func(agent, :b))
+    Fwatch.watch_dir(pid, ["/a/b", ~r(^/b/.*$)], update_func(agent, :c))
+    Fwatch.watch_dir(pid, ["/a", "/b/c"], update_func(agent, :d))
+
+    status = send_file_event(pid, "/a/b/c", agent)
+    assert length(status) == 4
+    assert Enum.at(status, 0) == {:a, "/a/b/c", :created}
+    assert Enum.at(status, 1) == {:b, "/a/b/c", :created}
+    assert Enum.at(status, 2) == {:c, "/a/b/c", :created}
+    assert Enum.at(status, 3) == {:d, "/a/b/c", :created}
   end
 end
